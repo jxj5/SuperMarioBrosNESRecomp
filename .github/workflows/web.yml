@@ -1,0 +1,30 @@
+# Builds the WebAssembly front end and publishes it to GitHub Pages.
+# The published site contains only the emulator: no ROM, nothing generated from a ROM.
+# Players load their own ROM in the page. Noncommercial use only (nesrecomp license).
+name: web
+on:
+  push:
+    branches: [master, main]
+    paths: ['web/**', '.github/workflows/web.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - uses: mymindstorm/setup-emsdk@v14
+      - run: python3 web/build_web.py
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: web/dist }
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: { name: github-pages, url: '${{ steps.deployment.outputs.page_url }}' }
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
